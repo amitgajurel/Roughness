@@ -2,88 +2,100 @@ library(shiny)
 if (!require('devtools')) install.packages('devtools'); library('devtools')
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/L1.R")
 
-# Define UI for application that draws a histogram
-ui <- basicPage(
-  fluidRow(
-    column(width=6,
-      plotOutput("img"
-                 , click = "plot_click"
-                 , hover = "plot_hover"
-                 , height = "350px"
-                 )
-    ),
-    column(width=3,
-           plotOutput("yaxs", height="350px")
-    )
-  ),
-  fluidRow(
-    column(width=6,
-           plotOutput("xaxs"
-                      , height="250px"
-                      , brush=brushOpts(id="xbrush", direction="x")
-                      , hover="x_hover"
-           )
-           )
-  )
-  
-  )# fluidPage
 
-# Define server logic required to draw a histogram
+# GUI Interface -----------------------------------------------------------
+
+ui <- basicPage(
+    fluidRow(
+      column(width=6,
+        plotOutput("main"
+          , height = "350px"
+          , click = "mce"
+          , dblclick = "mde"
+          , hover = "mhe"
+          , brush = "mbe"
+        )#plotOutput
+      )#column
+      
+      , column(width=3,
+          plotOutput("right"
+            , height="350px"
+            , click="rce"
+            , dblclick = "rde"
+            , hover = "rhe"
+            , brush="rbe"
+          )#plotOutput
+        )#column
+      )#fluidRow
+    
+    , fluidRow(
+        column(width=6,
+          plotOutput("bottom"
+            , height="250px"
+            , click="bce"
+            , dblclick="bde"
+            , hover="bhe"
+            , brush=brushOpts(id="bbe", direction="x")
+          )#plotOutput
+        )#column
+    )#fluidRow
+    
+    , fluidRow(
+        column(width=9,
+               verbatimTextOutput("info")
+        )#column
+    )#fluidRow
+  
+  )# basicPage
+
+
+# Server ------------------------------------------------------------------
+
 server <- function(input, output) {
-    crd <- reactiveValues(x = 100, y= 100)
-    
-    observeEvent(input$plot_click$x,
-                 {crd$x <- round(input$plot_click$x*dim(z)[1],0)}
-                 )
-    
-    observeEvent(input$plot_click$y,
-                 {crd$y <- round(input$plot_click$y*dim(z)[2],0)}
-    )
+    w <- dim(z)[1]
+    h <- dim(z)[2]
   
-  # reactive({
-  #   xx <- round(input$plot_click$x*dim(z)[1],0)
-  #   yy <- round(input$plot_click$y*dim(z)[2],0)
-  #   
-  # })
-  #xx <- reactive(round(input$plot_click$x*dim(z)[1],0))
+    mca <- reactiveValues(x = 100, y= 100)
+    mcr <- reactiveValues(x = 0.5, y=0.5)
     
+    observeEvent(input$mce$x, {
+        mcr$x <- input$mce$x
+        mca$x <- round(mcr$x*w,0)
+    })
+    
+    observeEvent(input$mce$y, {
+        mcr$y <- input$mce$y
+        mca$y <- round(mcr$y*h,0)
+    })
   
-  output$img <- renderPlot({
-    #xx <- round(input$plot_click$x*dim(z)[1],0)
-    #yy <- round(input$plot_click$y*dim(z)[2],0)
-    
+
+  output$main <- renderPlot({
     image(z, axes=F, useRaster=T)
-    abline(v=crd$x/dim(z)[1], h=crd$y/dim(z)[2])
+    abline(v=mcr$x, h=mcr$y)
     box(lwd=3)
-  })#output$img
+  })#main
   
-  output$xaxs <- renderPlot({
-    # yy <- round(input$plot_click$y*dim(z)[2],0)
-    yy <- crd$y
-    plot(z[,yy], type="l", lwd=2)
-    abline(v=crd$x)
+  output$bottom <- renderPlot({
+    plot(z[,mca$y], type="l", lwd=2)
+    abline(v=mca$x)
   })
   
-  output$yaxs <- renderPlot({
-    # xx <- round(input$plot_click$x*dim(z)[1],0)
-    xx <- crd$x
-    
-    plot(z[xx,],1:dim(z)[2], type="l", lwd=2)
-    abline(h=crd$y)
+  output$right <- renderPlot({
+    plot(z[mca$x,],1:dim(z)[2], type="l", lwd=2)
+    abline(h=mca$y)
     
   })
    
   output$info <- renderText({
-    #xx <- round(input$plot_click$x*dim(z)[1],0)
-    yy <- round(input$plot_click$y*dim(z)[2],0)
-    
-    paste0(  "x: ", crd$x, "\n"
-           , "y: ", crd$y, "\n"
-           , "z: ", round(z[crd$x,crd$y],2), "\n"
+    paste0(  "x: ", input$mcr$x, "\n"
+           , "y: ", input$mcr$y, "\n"
+           , "x2:", mca$x, "\n"
+           , "y2:", mca$y, "\n"
            )
   })#renderText
 }#server
 
-# Run the application 
+# Run Application ---------------------------------------------------------
+
 shinyApp(ui = ui, server = server)
 
