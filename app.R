@@ -41,7 +41,9 @@ ui <- basicPage(
         )#column
 
         , column(width=3,
-               tableOutput("info")
+               tableOutput("info"),
+               verbatimTextOutput("bpnl"),
+               verbatimTextOutput("rpnl")
         )#column
     )#fluidRow
   
@@ -53,7 +55,7 @@ ui <- basicPage(
 server <- function(input, output) {
     w <- dim(z)[1]
     h <- dim(z)[2]
-
+    
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
     
@@ -105,6 +107,26 @@ server <- function(input, output) {
   output$info <- renderTable({
     mc()
   })#renderText
+  
+  output$bpnl <- renderText({
+    
+  paste0("Bottom Panel Hover:\n",
+         "x: ", bha()[2], "\n",
+         "y: ", mca$y, "\n",
+         "z: ", round(bha()[1],2)
+  )
+  })#renderText
+  
+  output$rpnl <- renderText({
+    df_ <- z[mca$x,rbr.min():rbr.max()]
+    
+    paste0("Right Panel Brush:\n",
+           "y.min: ", rbr.min(), "\n",
+           "y.max: ", rbr.max(), "\n",
+           "z.avg: ", round(mean(df_),2), "\n",
+           "z.sd:  ", round(sd(df_),2)
+           )
+  })
 }#server
 
 # Run Application ---------------------------------------------------------
