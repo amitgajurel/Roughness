@@ -24,7 +24,7 @@ ui <- basicPage(
             , click="rcd"
             , dblclick = "rdd"
             , hover = "rhd"
-            , brush="rbd"
+            , brush=brushOpts(id="rbd", direction="y")
           )#plotOutput
         )#column
       )#fluidRow
@@ -41,7 +41,7 @@ ui <- basicPage(
         )#column
 
         , column(width=3,
-               verbatimTextOutput("info")
+               tableOutput("info")
         )#column
     )#fluidRow
   
@@ -53,15 +53,24 @@ ui <- basicPage(
 server <- function(input, output) {
     w <- dim(z)[1]
     h <- dim(z)[2]
+
+    rbr.min <- reactive({round(input$rbd$ymin,0)})
+    rbr.max <- reactive({round(input$rbd$ymax,0)})
     
-    mca <- reactiveValues(x = 100, y= 100)
-    mcr <- reactiveValues(x = 0.5, y=0.5)
+    mz <- reactive({round(z[mca$x, mca$y],2)})
+    mc <- reactive({matrix(c(mca$x, mca$y, mz())
+                           , nrow=1
+                           , dimnames=list("main", c("x","y","z"))
+          )})
     
     rdf <- reactive({data.frame(x=z[mca$x,], y=1:h)})
     rha <- reactive({nearPoints(rdf(), input$rhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
     bdf <- reactive({data.frame(y=z[,mca$y], x=1:w)})
     bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
+    
+    mca <- reactiveValues(x = 100, y= 100)
+    mcr <- reactiveValues(x = 0.5, y=0.5)
     
     observeEvent(input$mcd$x, {
         mcr$x <- input$mcd$x
@@ -73,20 +82,14 @@ server <- function(input, output) {
         mca$y <- round(mcr$y*h,0)
     })
 
+
   output$main <- renderPlot({
-    # a <- round(rha()[1],2)
-    # b <- round(bha()[1],2)
-    # depth <- max(a,b)
-    
     image(z, axes=F, useRaster=T)
     abline(v=mcr$x, h=mcr$y)
     box(lwd=3)
     
     points(mcr$x, rha()[2]/h, pch=3)
-    #text(mcr$x, rha()[2]/h, depth, pos=2)
-    
     points(bha()[2]/w, mcr$y, pch=3)
-    #text(bha()[2]/w, mcr$y, depth, pos=1)
   })#main
   
   output$bottom <- renderPlot({
@@ -99,10 +102,8 @@ server <- function(input, output) {
     abline(h=mca$y)
   })
    
-  output$info <- renderText({
-   
-    paste0(rha()
-           )
+  output$info <- renderTable({
+    mc()
   })#renderText
 }#server
 
