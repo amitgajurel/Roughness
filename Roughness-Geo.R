@@ -62,3 +62,22 @@ MAA <- function(z) {
   
   return(MAA)
 }
+
+#' Calculates the RMS of the first derivative of input vectors x, y
+#'
+#' @param z A dataframe of profile data: length and depth
+#' 
+#' @author D. Craig Jones as modified from matlab by Stephanie Brown
+#' @examples
+#'    z <- data.frame(x=1:10, y=rnorm(10))
+#'    Z2(z)
+Z2 <- function(z) {
+  x <- z[,1]
+  y <- z[,2]
+  
+  n <- length(x)
+  z2 <- sqrt((1/n)*sum((diff(y)/diff(x))^2))
+  
+  return(z2)
+  
+}
