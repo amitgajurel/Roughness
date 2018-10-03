@@ -40,3 +40,25 @@ ENERGYS <- function(z) {
   
   return(Es)
 }
+
+#' Calculates the mean absolute angle, in radians, of input
+#' vector x,y.  The data is detrended before calculation.
+#'
+#' @param z A dataframe of profile data: length and depth
+#' 
+#' @author D. Craig Jones as modified from matlab by Stephanie Brown
+#' @examples
+#'    z <- data.frame(x=1:10, y=rnorm(10))
+#'    MAA(z)
+MAA <- function(z) {
+  x <- z[,1]
+  y <- z[,2]
+  
+  # linear detrend
+  lm <- polyfit(x,y,1)
+  y <- y - (lm[1]*x + lm[2])
+  
+  MAA <- mean(atan(abs(diff(y)/diff(x))))
+  
+  return(MAA)
+}
