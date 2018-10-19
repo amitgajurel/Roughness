@@ -1,8 +1,8 @@
-.libPaths("G:/Delivery/Shared/ACAD/JonesDC/_Support/RWD")
+#.libPaths("G:/Delivery/Shared/ACAD/JonesDC/_Support/RWD")
 
-if(!require("pracma")) install.packages("pracma"); library(pracma)
-if(!require("devtools")) install.packages("devtools"); library(devtools)
-if(!require("roxygen2")) install.packages("roxygen2"); library(roxygen2)
+#if(!require("pracma")) install.packages("pracma"); library(pracma)
+#if(!require("devtools")) install.packages("devtools"); library(devtools)
+#if(!require("roxygen2")) install.packages("roxygen2"); library(roxygen2)
 
 #' Calculates the root mean square of a profile
 #'
@@ -80,4 +80,37 @@ Z2 <- function(z) {
   
   return(z2)
   
+}
+
+
+SINUOSITY1 <- function(z) {
+  x <- z[,1]
+  y <- z[,2]
+  
+  L <- sqrt((x[length(x)]-x[1])^2 + (y[length(x)]-y[1])^2)
+  
+  arclen <- arclength(z)
+  S1 <- arclen/L
+  
+  return(S1)
+  
+}
+
+arclength <- function(z) {
+  seglen <- sqrt(diff(z[,1])^2+diff(z[,2])^2)
+  arclen <- sum(seglen)
+  
+  return(arclen)
+}
+
+
+Geom <- function(z) {
+  retVal <- data.frame(RMS=RMS(z)
+                     , ENERGYS=ENERGYS(z)
+                     , MAA=MAA(z)
+                     , Z2=Z2(z)
+                     , SINUOSITY1=SINUOSITY1(z)
+            )
+  
+  return(retVal)
 }
