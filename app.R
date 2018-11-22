@@ -59,10 +59,14 @@ ui <- basicPage(
 
          , column(width=3,
                 tableOutput("info"),
-                verbatimTextOutput("bpnl"),
-                verbatimTextOutput("rpnl")
+                verbatimTextOutput("bpnl")
          )#column
     )#fluidRow
+  , fluidRow(
+      column(width=9,
+          tableOutput("xtbl")
+             )
+  )
   
   )# basicPage
 
@@ -164,18 +168,11 @@ server <- function(input, output) {
   
   })#renderText
   
-  output$rpnl <- renderText({
+  output$xtbl <- renderTable({
     df_ <- z[mca$x,rbr.min():rbr.max()]
     tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
     
-    renderDataTable <- datatable(Geom(tbl))
-    
-    # paste0("Right Panel Brush:\n",
-    #        "y.min: ", rbr.min(), "\n",
-    #        "y.max: ", rbr.max(), "\n",
-    #        "z.avg: ", round(mean(df_),2), "\n",
-    #        "z.sd:  ", round(sd(df_),2),
-    #        )
+    Geom(tbl)
   })
 }#server
 
