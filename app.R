@@ -1,12 +1,29 @@
 library(shiny)
 if (!require('devtools')) install.packages('devtools'); library('devtools')
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/L1.R")
+source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Geo.R")
 
 
 # GUI Interface -----------------------------------------------------------
 # See Notes at EOF for Variable Naming Scheme
 
 ui <- basicPage(
+  fluidRow(
+    column(width=3,
+      checkboxInput("image", "Show Image", TRUE)),
+    column(width=9,
+      selectInput("colors", "Color Scheme: "
+          , c(
+            "heat.colors",
+            "terrain.colors",
+            "topo.colors",
+            "cm.colors",
+            "rainbow"
+          )
+      ),
+      checkboxInput("rev","reverse colors", FALSE)
+    )
+  ),
     fluidRow(
       column(width=6,
         plotOutput("main"
@@ -40,11 +57,11 @@ ui <- basicPage(
           )#plotOutput
         )#column
 
-        , column(width=3,
-               tableOutput("info"),
-               verbatimTextOutput("bpnl"),
-               verbatimTextOutput("rpnl")
-        )#column
+         , column(width=3,
+                tableOutput("info"),
+                verbatimTextOutput("bpnl"),
+                verbatimTextOutput("rpnl")
+         )#column
     )#fluidRow
   
   )# basicPage
@@ -53,9 +70,10 @@ ui <- basicPage(
 # Server ------------------------------------------------------------------
 
 server <- function(input, output) {
+
     w <- dim(z)[1]
     h <- dim(z)[2]
-    
+
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
     
@@ -70,6 +88,29 @@ server <- function(input, output) {
     
     bdf <- reactive({data.frame(y=z[,mca$y], x=1:w)})
     bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
+    
+    color <- reactive({
+        colVal <- 1:5
+        names(colVal) <- c("heat.colors","terrain.colors","topo.colors","cm.colors","rainbow")
+        if(input$rev) {
+          switch(colVal[input$colors],
+                 rev(heat.colors(100)),
+                 rev(terrain.colors(100)),
+                 rev(topo.colors(100)),
+                 rev(cm.colors(100)),
+                 rev(rainbow(100))
+          )   
+        }
+        else{
+            switch(colVal[input$colors],
+                   heat.colors(100),
+                   terrain.colors(100),
+                   topo.colors(100),
+                   cm.colors(100),
+                   rainbow(100)
+                   )   
+        }
+    })
     
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
@@ -86,7 +127,11 @@ server <- function(input, output) {
 
 
   output$main <- renderPlot({
-    image(z, axes=F, useRaster=T)
+    # if(input$image) {
+    #   image(z, axes=T, useRaster=T, col=color())}
+    # else {
+    #   plot(C, axes=T, useRaster=T)}
+    image(z, axes=T, useRaster=T, col=color())
     abline(v=mcr$x, h=mcr$y)
     box(lwd=3)
     
@@ -113,19 +158,24 @@ server <- function(input, output) {
   paste0("Bottom Panel Hover:\n",
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
-         "z: ", round(bha()[1],2)
-  )
+         "z: ", round(bha()[1],2),"\n",
+         "w: ", w
+        )
+  
   })#renderText
   
   output$rpnl <- renderText({
     df_ <- z[mca$x,rbr.min():rbr.max()]
+    tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
     
-    paste0("Right Panel Brush:\n",
-           "y.min: ", rbr.min(), "\n",
-           "y.max: ", rbr.max(), "\n",
-           "z.avg: ", round(mean(df_),2), "\n",
-           "z.sd:  ", round(sd(df_),2)
-           )
+    renderDataTable <- datatable(Geom(tbl))
+    
+    # paste0("Right Panel Brush:\n",
+    #        "y.min: ", rbr.min(), "\n",
+    #        "y.max: ", rbr.max(), "\n",
+    #        "z.avg: ", round(mean(df_),2), "\n",
+    #        "z.sd:  ", round(sd(df_),2),
+    #        )
   })
 }#server
 
