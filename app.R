@@ -9,9 +9,9 @@ source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughne
 
 ui <- basicPage(
   fluidRow(
+    column(width=2,
+      checkboxInput("image", "Show Depth", TRUE)),
     column(width=3,
-      checkboxInput("image", "Show Image", TRUE)),
-    column(width=9,
       selectInput("colors", "Color Scheme: "
           , c(
             "heat.colors",
@@ -22,6 +22,13 @@ ui <- basicPage(
           )
       ),
       checkboxInput("rev","reverse colors", FALSE)
+    ),
+    column(width=3,
+      sliderInput("range", "Range of Depth",
+                  min=floor(min(z, na.rm=TRUE)/10)*10,
+                  max=ceiling(max(z, na.rm=TRUE)/10)*10,
+                  value=c(min(z, na.rm=TRUE),max(z, na.rm=TRUE))
+                  )
     )
   ),
     fluidRow(
@@ -77,7 +84,7 @@ server <- function(input, output) {
 
     w <- dim(z)[1]
     h <- dim(z)[2]
-
+    
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
     
@@ -87,10 +94,10 @@ server <- function(input, output) {
                            , dimnames=list("main", c("x","y","z"))
           )})
     
-    rdf <- reactive({data.frame(x=z[mca$x,], y=1:h)})
+    rdf <- reactive({data.frame(x=z[mca$x,], y=1:ncol(z))})
     rha <- reactive({nearPoints(rdf(), input$rhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
-    bdf <- reactive({data.frame(y=z[,mca$y], x=1:w)})
+    bdf <- reactive({data.frame(y=z[,mca$y], x=1:nrow(z))})
     bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
     color <- reactive({
@@ -118,6 +125,16 @@ server <- function(input, output) {
     
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
+    ref <- reactiveValues(w = dim(z)[1], h = dim(z)[2])
+    
+    # observeEvent(input$image, {
+    #   if(input$image)
+    #     {w=dim(z)[1]
+    #      h=dim(z)[2]}
+    #   else
+    #     {w=1
+    #      h=1}
+    # })
     
     observeEvent(input$mcd$x, {
         mcr$x <- input$mcd$x
@@ -131,16 +148,18 @@ server <- function(input, output) {
 
 
   output$main <- renderPlot({
-    # if(input$image) {
-    #   image(z, axes=T, useRaster=T, col=color())}
-    # else {
-    #   plot(C, axes=T, useRaster=T)}
-    image(z, axes=T, useRaster=T, col=color())
-    abline(v=mcr$x, h=mcr$y)
+    if(input$image) {
+       image(z, axes=T, useRaster=T, col=color(), zlim=c(input$range[1],input$range[2]))
+       abline(v=mcr$x, h=mcr$y)
+    } else {
+       plot(C, axes=T, useRaster=T)
+       abline(v=mca$x, h=mca$y)
+    }
+    
     box(lwd=3)
     
-    points(mcr$x, rha()[2]/h, pch=3)
-    points(bha()[2]/w, mcr$y, pch=3)
+    #points(mcr$x, rha()[2]/h, pch=3)
+    #points(bha()[2]/w, mcr$y, pch=3)
   })#main
   
   output$bottom <- renderPlot({
@@ -163,7 +182,7 @@ server <- function(input, output) {
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
          "z: ", round(bha()[1],2),"\n",
-         "w: ", w
+         "ref :", w
         )
   
   })#renderText
