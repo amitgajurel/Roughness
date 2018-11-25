@@ -3,7 +3,10 @@ setwd("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/fig/L1")
 #if (!require('iotools')) install.packages('iotools'); library('iotools')
 if (!require('bmp')) install.packages('bmp'); library('bmp')
 if (!require('pixmap')) install.packages('pixmap'); library('pixmap')
-if (!require('imager')) install.packages('imager'); library('imager')
+if (!require('imager')) install.packages('imager'); library(imager)
+if (!require('tiff')) install.packages('tiff'); library(tiff)
+
+C <- as.cimg(readTIFF("RGB_1mm_Gridded.tif"))
 
 r <- read.bmp("RGB_1mm_Gridded.bmp")
 p <- pixmapRGB(r)
