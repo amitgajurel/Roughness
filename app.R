@@ -82,8 +82,9 @@ ui <- basicPage(
 
 server <- function(input, output) {
 
-    w <- dim(z)[1]
-    h <- dim(z)[2]
+    w <- reactive(if(input$image) {dim(z)[1]} else {1})
+    h <- reactive(if(input$image) {dim(z)[2]} else {1})
+
     
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
@@ -125,31 +126,21 @@ server <- function(input, output) {
     
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
-    ref <- reactiveValues(w = dim(z)[1], h = dim(z)[2])
-    
-    # observeEvent(input$image, {
-    #   if(input$image)
-    #     {w=dim(z)[1]
-    #      h=dim(z)[2]}
-    #   else
-    #     {w=1
-    #      h=1}
-    # })
     
     observeEvent(input$mcd$x, {
         mcr$x <- input$mcd$x
-        mca$x <- round(mcr$x*w,0)
+        mca$x <- round(mcr$x*w(),0)
     })
     
     observeEvent(input$mcd$y, {
         mcr$y <- input$mcd$y
-        mca$y <- round(mcr$y*h,0)
+        mca$y <- round(mcr$y*h(),0)
     })
 
 
   output$main <- renderPlot({
     if(input$image) {
-       image(z, axes=T, useRaster=T, col=color(), zlim=c(input$range[1],input$range[2]))
+       image(z, axes=T, useRaster=T, col=color(), ylim=c(1,0))#, zlim=c(input$range[1],input$range[2]))
        abline(v=mcr$x, h=mcr$y)
     } else {
        plot(C, axes=T, useRaster=T)
@@ -168,7 +159,7 @@ server <- function(input, output) {
   })
   
   output$right <- renderPlot({
-    plot(z[mca$x,],1:dim(z)[2], type="l", lwd=2)
+    plot(z[mca$x,],1:dim(z)[2], type="l", lwd=2, ylim=c(dim(z)[2],0))
     abline(h=mca$y)
   })
    
@@ -182,7 +173,7 @@ server <- function(input, output) {
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
          "z: ", round(bha()[1],2),"\n",
-         "ref :", w
+         "ref :", w()
         )
   
   })#renderText
