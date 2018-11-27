@@ -80,3 +80,78 @@ divModFrac <- function(z) {
   
   return(D)
 }
+
+
+#' RLFRACTAL calculates the fractal dimension of input vectors x and y 
+#' using the roughness-length method. The vector wv contains the window
+#' lengths of the analysis.
+#' 
+#' @param z A dataframe of profile data: length and depth
+#' 
+#' @author Stephanie Brown, modified for R by D. Craig Jones
+#' @examples
+#'    z <- data.frame(x=1:50, y=rnorm(50))
+#'    rlFractal(z)
+rlFractal <- function(z) {
+    x <- z$x
+    y <- z$y
+    
+    # Global detrending
+    a <- polyfit(x,y,1)
+    y <- y - (a[1]*x+a[2])
+    
+    n <- length(x)
+    
+    wv <- round(linspace(0.04*n, 0.1*n, 7))
+    
+    nit <- length(wv)
+    
+    # Calculate window RMS values
+    wrms <- rep(0,nit)#zeros(1,nit)
+    
+    for (k in 1:nit) {
+        nw <- floor(n/wv[k])    # size of regular windows
+        lwe <- mod(n,wv[k])     # size of off window
+        
+        # Cycle through windows
+        for (j in 1:nw) {
+            # calculate RMS for window
+            xw <- x[c(((j-1)*wv[k]+1):(j*wv[k]))]
+            yw <- y[c(((j-1)*wv[k]+1):(j*wv[k]))]
+            
+            #Local Detrending
+            a <- polyfit(xw,yw,1)
+            yw <- yw - (a[1]*xw+a[2])
+            
+            # Window RMS saved
+            wrms[k] <- wrms[k] + sqrt(mean(yw^2))#RMS(yw)
+        } # for(j)
+        
+        # RMS on last (uneven) window
+        if (lwe!=0) {
+            xw <- x[c((nw*wv[k]+1):length(x))]
+            yw <- y[c((nw*wv[k]+1):length(y))]
+            
+            # Local Detrending
+            a <- polyfit(xw,yw,1)
+            yw <- yw - (a[1]*xw+a[2])
+            
+            # RMS updated
+            wrms[k] <- wrms[k] + sqrt(mean(yw^2))#RMS(yw)
+            wrms[k] <- wrms[k]/(nw+(lwe/wv[k]))
+        } else {
+            wrms[k] <- wrms[k]/nw
+        } # end if
+    } # for (k)
+    
+    Lwv <- log10(wv)
+    Lwrms <- log10(wrms)
+    
+    coeffs <- polyfit(Lwv, Lwrms, 1)
+    #D <- 1-coeffs[1]
+    D <- coeffs[1]
+    
+    a <- abs(coeffs[2])
+    
+    return(a)
+}

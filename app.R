@@ -10,7 +10,7 @@ source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughne
 ui <- basicPage(
   fluidRow(
     column(width=2,
-      checkboxInput("image", "Show Depth", TRUE)),
+      checkboxInput("image", "Show Depth", FALSE)),
     column(width=3,
       selectInput("colors", "Color Scheme: "
           , c(
@@ -22,13 +22,6 @@ ui <- basicPage(
           )
       ),
       checkboxInput("rev","reverse colors", FALSE)
-    ),
-    column(width=3,
-      sliderInput("range", "Range of Depth",
-                  min=floor(min(z, na.rm=TRUE)/10)*10,
-                  max=ceiling(max(z, na.rm=TRUE)/10)*10,
-                  value=c(min(z, na.rm=TRUE),max(z, na.rm=TRUE))
-                  )
     )
   ),
     fluidRow(
@@ -80,7 +73,7 @@ ui <- basicPage(
 
 # Server ------------------------------------------------------------------
 
-server <- function(input, output) {
+server <- function(input, output, session) {
 
     w <- reactive(if(input$image) {dim(z)[1]} else {1})
     h <- reactive(if(input$image) {dim(z)[2]} else {1})
@@ -126,6 +119,9 @@ server <- function(input, output) {
     
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
+    
+    observeEvent(!is.na(input$bbd$xmin),
+                 session$resetBrush("right"))
     
     observeEvent(input$mcd$x, {
         mcr$x <- input$mcd$x
@@ -173,17 +169,20 @@ server <- function(input, output) {
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
          "z: ", round(bha()[1],2),"\n",
-         "ref :", w()
+         "ref :", !is.na(input$bbd$xmin)
         )
   
   })#renderText
   
   output$xtbl <- renderTable({
+    req(rbr.min())
+    
     df_ <- z[mca$x,rbr.min():rbr.max()]
     tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
     
-    Geom(tbl)
-  })
+    Geom(tbl)}
+    , spacing="xs"
+  )
 }#server
 
 # Run Application ---------------------------------------------------------
