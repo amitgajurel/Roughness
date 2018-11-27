@@ -155,3 +155,46 @@ rlFractal <- function(z) {
     
     return(a)
 }
+
+#' This function computes the fractal dimension using the spectral method
+#' as detailed in CHARACTERIZATION OF THE ROCK JOINT SURFACE by Vuopio 
+#' and Polla
+#' 
+#' @param z A dataframe of profile data: length and depth
+#' 
+#' @author Stephanie Brown, modified for R by D. Craig Jones
+#' @examples
+#'    z <- data.frame(x=1:50, y=rnorm(50))
+#'   SpectralMethod(z)
+SpectralMethod <- function(z) {
+    x <- z$x
+    y <- z$y
+    
+    y <- y-mean(y) # easy way to reduce DC bias
+    
+    L <- length(x)
+    dt <- mean(diff(x))
+    Fs <- (1/dt)*10^3
+    
+    N <- 2^nextpow2(L)
+    df <- Fs/N
+    f <- seq(0,Fs/2, df)
+    
+    Y <- fft(y,N)
+    Y <- Y[1:(N/2+1)]
+    
+    psdY <- (1/(N*Fs))*abs(Y)^0.2
+    psdY[2:(length(psdY)-1)] <- 2*psdY[2:(length(psdY)-1)]
+    
+    log_f <- log10(f)
+    log_PSD <- log10(psdY)
+    
+    coeffs <- polyfit(log_f[2:length(log_f)], log_PSD[2:length(log_PSD)],1)
+    
+    a <- coeffs[2]
+    slope_B <- coeffs[1]
+    
+    D <- 1-(5+slope_B)/2
+    
+    return(abs(D))
+}
