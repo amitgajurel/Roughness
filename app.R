@@ -120,9 +120,6 @@ server <- function(input, output, session) {
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
     
-    observeEvent(!is.na(input$bbd$xmin),
-                 session$resetBrush("right"))
-    
     observeEvent(input$mcd$x, {
         mcr$x <- input$mcd$x
         mca$x <- round(mcr$x*w(),0)
@@ -136,7 +133,14 @@ server <- function(input, output, session) {
 
   output$main <- renderPlot({
     if(input$image) {
-       image(z, axes=T, useRaster=T, col=color(), ylim=c(1,0))#, zlim=c(input$range[1],input$range[2]))
+       image(z
+             , axes=T
+             #, useRaster=T
+             , col=color()
+             , ylim=c(1,0)
+             , xlim=c(-0.05, 1.05)
+             , xaxt="s"
+        )#, zlim=c(input$range[1],input$range[2]))
        abline(v=mcr$x, h=mcr$y)
     } else {
        plot(C, axes=T, useRaster=T)

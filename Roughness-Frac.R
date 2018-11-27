@@ -153,7 +153,7 @@ rlFractal <- function(z) {
     
     a <- abs(coeffs[2])
     
-    return(a)
+    return(abs(a))
 }
 
 #' This function computes the fractal dimension using the spectral method
@@ -197,4 +197,20 @@ SpectralMethod <- function(z) {
     D <- 1-(5+slope_B)/2
     
     return(abs(D))
+}
+
+
+
+
+
+
+
+
+Frac <- function(z) {
+  retVal <- data.frame(divModFrac = divModFrac(z)
+                       , RoughnessLength = rlFractal(z)
+                       , SpectralMethod = SpectralMethod(z)
+  )
+  
+  return(retVal)
 }
