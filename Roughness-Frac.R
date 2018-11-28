@@ -2,7 +2,7 @@ if(!require("pracma")) install.packages("pracma"); library(pracma)
 if(!require("devtools")) install.packages("devtools"); library(devtools)
 if(!require("roxygen2")) install.packages("roxygen2"); library(roxygen2)
 
-z <- data.frame(x=1:50, y=rnorm(50))
+#z <- data.frame(x=1:50, y=rnorm(50))
 
 #' This function calculates the fractal dimension using the
 #' modified divider method as detailed in CHARACTERIZATION OF THE ROCK JOINT
@@ -149,11 +149,13 @@ rlFractal <- function(z) {
     
     coeffs <- polyfit(Lwv, Lwrms, 1)
     #D <- 1-coeffs[1]
-    D <- coeffs[1]
+    D <- 1-coeffs[1]
     
     a <- abs(coeffs[2])
     
-    return(abs(a))
+    D <- unname(lm(Lwv[use]~Lwrms[use])$coef[1])
+    
+    return(D)
 }
 
 #' This function computes the fractal dimension using the spectral method
@@ -200,16 +202,110 @@ SpectralMethod <- function(z) {
 }
 
 
+semivar <- function(y, h) {
+  n <- length(y)
+  np <- n-h
+  
+  smv <- (1/(2*np))*sum((y[1:np]-y[(1:np)+h])^2)
 
+  return(smv)
+}
 
+semivarFrac <- function(z) {
+    y <- z$y
+    
+    lagVec <- 1:25
+    semivars <- rep(0,length(lagVec))#zeroes(1,length(lagVec))
+    for (i in 1:length(lagVec)) {
+        semivars[i] <- semivar(y, lagVec[i])
+    } # for
+    
+    logSem <- log10(semivars)
+    loglag <- log10(lagVec)
+    coeffs <- polyfit(loglag, logSem, 1)
+    slope <- coeffs[1]
+    a <- coeffs[2]
+    D <- 2 - slope/2
+    return(D)
+}
 
+countSquares <- function(x,y,s) {
 
+    spacing <- x[2]-x[1]
+    
+    indCount <- s/spacing
+    x_pos <- x[1]
+    
+    q <- 0
+    sqCount <- 0
+    
+    for (i in seq(0,x[length(x)]-x[1]-s,s)) {
+        for (j in seq(0,max(y)-min(y),s)) {
+            x_pos <- x[1]+i
+            y_pos <- min(y)+j
+            #pos <- c(x_pos y_pos s s)
+            
+            indSegY <- y[round(q*indCount+1,0):round((q+1)*indCount,0)]
+            indSegX <- x[round(q*indCount+1,0):round((q+1)*indCount,0)]
+            
+            for (k in 1:indCount) {
+                if ( (indSegY[k] > y_pos) && (indSegY[k] < (y_pos+s)) &&
+                     (indSegX[k] > x_pos) && (indSegX[k] < (x_pos+s)) ) {
+                  sqCount <- sqCount+1
+                  break
+                } # end if
+            } # for(k)
+        } # for(j)
+        q <- q + 1
+    } # for(i)
+    
+    if ((x_pos+s) < x[length(x)]) {
+        x_pos <- x_pos+s
+        remStartInd <- round(q*indCount+1,0)
+        remSegY <- y[remStartInd:length(y)]
+        for (b in seq(0,max(y)-min(y),s)) {
+            y_pos <- min(y)+b
+            for (a in 1:length(remSegY)) {
+                if ( (remSegY[a] > y_pos) && (remSegY[a] < (y_pos+s)) ) {
+                    sqCount <- sqCount + 1
+                    break
+                } # end if
+            } # for(a)
+        } # for(b)
+    } # end if
+    
+    return(sqCount)
+} # countSquares
+
+boxcount <- function(z) {
+    x <- z$x
+    y <- z$y
+    
+    R <- c(0.2, 0.4, 0.5, 1, 1.5, 2, 3, 4, 5, 10)
+    N <- rep(0,length(R))
+    
+    for (i in 1:length(R)) {
+        N[i] <- countSquares(x, y, R[i])
+    } # for(i)
+    
+    log_N <- log10(N)
+    invR <- 1/R
+    log_invR <- log10(invR)
+    
+    use <- is.finite(log_N)
+    
+    D <- unname(lm(log_invR[use]~log_N[use])$coef[2])
+    
+    return(D)
+} # boxcount
 
 
 Frac <- function(z) {
   retVal <- data.frame(divModFrac = divModFrac(z)
                        , RoughnessLength = rlFractal(z)
                        , SpectralMethod = SpectralMethod(z)
+                       , Semivariance = semivarFrac(z)
+                       , boxcount = boxcount(z)
   )
   
   return(retVal)

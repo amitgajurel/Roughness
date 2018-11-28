@@ -8,8 +8,8 @@ if (!require('tiff')) install.packages('tiff'); library(tiff)
 
 C <- as.cimg(readTIFF("RGB_1mm_Gridded.tif"))
 
-r <- read.bmp("RGB_1mm_Gridded.bmp")
-p <- pixmapRGB(r)
+#r <- read.bmp("RGB_1mm_Gridded.bmp")
+#p <- pixmapRGB(r)
 # plot(p, xaxs="i", yaxs="i")
 # box(lwd=2)
 

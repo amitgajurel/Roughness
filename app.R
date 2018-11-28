@@ -2,6 +2,7 @@ library(shiny)
 if (!require('devtools')) install.packages('devtools'); library('devtools')
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/L1.R")
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Geo.R")
+source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Frac.R")
 
 
 # GUI Interface -----------------------------------------------------------
@@ -81,6 +82,9 @@ server <- function(input, output, session) {
     
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
+    
+    bbr.min <- reactive({round(input$bbd$ymin,0)})
+    bbr.max <- reactive({round(input$bbd$ymax,0)})
     
     mz <- reactive({round(z[mca$x, mca$y],2)})
     mc <- reactive({matrix(c(mca$x, mca$y, mz())
@@ -173,18 +177,25 @@ server <- function(input, output, session) {
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
          "z: ", round(bha()[1],2),"\n",
-         "ref :", !is.na(input$bbd$xmin)
+         "ref :", is.null(input$rbd$xmin)
         )
   
   })#renderText
   
   output$xtbl <- renderTable({
-    req(rbr.min())
+    if (is.null(input$rbd$xmin)) {
+        df_ <- z[mca$x,]
+        tbl <- data.frame(x=1:ncol(z), y=df_)
+        tbl <- na.omit(tbl)
+    } else {
+        df_ <- z[mca$x,rbr.min():rbr.max()]
+        tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
+        tbl <- na.omit(tbl)
+    }
     
-    df_ <- z[mca$x,rbr.min():rbr.max()]
-    tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
-    
-    Geom(tbl)}
+    #Geom(tbl)
+    Frac(tbl)
+    }
     , spacing="xs"
   )
 }#server
