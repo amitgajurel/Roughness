@@ -116,8 +116,8 @@ rlFractal <- function(z) {
         # Cycle through windows
         for (j in 1:nw) {
             # calculate RMS for window
-            xw <- x[c(((j-1)*wv[k]+1):(j*wv[k]))]
-            yw <- y[c(((j-1)*wv[k]+1):(j*wv[k]))]
+            xw <- x[((j-1)*wv[k]+1):(j*wv[k])]
+            yw <- y[((j-1)*wv[k]+1):(j*wv[k])]
             
             #Local Detrending
             a <- polyfit(xw,yw,1)

@@ -11,7 +11,9 @@ source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughne
 ui <- basicPage(
   fluidRow(
     column(width=2,
-      checkboxInput("image", "Show Depth", FALSE)),
+      checkboxInput("image", "Show Depth", TRUE)
+    ), # column (left)
+    
     column(width=3,
       selectInput("colors", "Color Scheme: "
           , c(
@@ -23,7 +25,20 @@ ui <- basicPage(
           )
       ),
       checkboxInput("rev","reverse colors", FALSE)
-    )
+    ), # column (middle)
+    
+    column(width=3,
+      selectInput("core", "Select Core Image: "
+          , c(
+            "L1" ,
+            "L2" ,
+            "O1" ,
+            "O4" ,
+            "V5" ,
+            "V21"
+          )
+      )# selectInput
+    ) # column (right)
   ),
     fluidRow(
       column(width=6,
@@ -76,8 +91,8 @@ ui <- basicPage(
 
 server <- function(input, output, session) {
 
-    w <- reactive(if(input$image) {dim(z)[1]} else {1})
-    h <- reactive(if(input$image) {dim(z)[2]} else {1})
+    w <- reactive(if(input$image) {dim(dep())[1]} else {1})
+    h <- reactive(if(input$image) {dim(dep())[2]} else {1})
 
     
     rbr.min <- reactive({round(input$rbd$ymin,0)})
@@ -86,16 +101,16 @@ server <- function(input, output, session) {
     bbr.min <- reactive({round(input$bbd$ymin,0)})
     bbr.max <- reactive({round(input$bbd$ymax,0)})
     
-    mz <- reactive({round(z[mca$x, mca$y],2)})
+    mz <- reactive({round(dep()[mca$x, mca$y],2)})
     mc <- reactive({matrix(c(mca$x, mca$y, mz())
                            , nrow=1
                            , dimnames=list("main", c("x","y","z"))
           )})
     
-    rdf <- reactive({data.frame(x=z[mca$x,], y=1:ncol(z))})
+    rdf <- reactive({data.frame(x=dep()[mca$x,], y=1:ncol(z))})
     rha <- reactive({nearPoints(rdf(), input$rhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
-    bdf <- reactive({data.frame(y=z[,mca$y], x=1:nrow(z))})
+    bdf <- reactive({data.frame(y=dep()[,mca$y], x=1:nrow(z))})
     bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
     color <- reactive({
@@ -119,7 +134,33 @@ server <- function(input, output, session) {
                    rainbow(100)
                    )   
         }
-    })
+    }) #reactive (color)
+    
+    dep <- reactive({
+      colVal <- 1:6
+      names(colVal) <- c("L1", "L2", "O1", "O4", "V5", "V21")
+      
+      switch(colVal[input$core],
+             L1.z,
+             L2.z,
+             O1.z,
+             O4.z,
+             V5.z,
+             V21.z)
+    }) # reactive (z)
+    
+    img <- reactive({
+      colVal <- 1:6
+      names(colVal) <- c("L1", "L2", "O1", "O4", "V5", "V21")
+      
+      switch(colVal[input$core],
+             L1.RGB,
+             L2.RGB,
+             O1.RGB,
+             O4.RGB,
+             V5.RGB,
+             V21.RGB)
+    }) # reactive (z)
     
     mca <- reactiveValues(x = 100, y= 100)
     mcr <- reactiveValues(x = 0.5, y=0.5)
@@ -137,7 +178,7 @@ server <- function(input, output, session) {
 
   output$main <- renderPlot({
     if(input$image) {
-       image(z
+       image(dep()
              , axes=T
              #, useRaster=T
              , col=color()
@@ -147,7 +188,7 @@ server <- function(input, output, session) {
         )#, zlim=c(input$range[1],input$range[2]))
        abline(v=mcr$x, h=mcr$y)
     } else {
-       plot(C, axes=T, useRaster=T)
+       plot(img(), axes=T)#, useRaster=T)
        abline(v=mca$x, h=mca$y)
     }
     
@@ -158,12 +199,12 @@ server <- function(input, output, session) {
   })#main
   
   output$bottom <- renderPlot({
-    plot(z[,mca$y], type="l", lwd=2)
+    plot(dep()[,mca$y], type="l", lwd=2)
     abline(v=mca$x)
   })
   
   output$right <- renderPlot({
-    plot(z[mca$x,],1:dim(z)[2], type="l", lwd=2, ylim=c(dim(z)[2],0))
+    plot(dep()[mca$x,],1:dim(dep())[2], type="l", lwd=2, ylim=c(dim(dep())[2],0))
     abline(h=mca$y)
   })
    
@@ -177,7 +218,8 @@ server <- function(input, output, session) {
          "x: ", bha()[2], "\n",
          "y: ", mca$y, "\n",
          "z: ", round(bha()[1],2),"\n",
-         "ref :", is.null(input$rbd$xmin)
+         "ref :", is.null(input$rbd$xmin),"\n",
+         "z() :", dim(dep())[2]
         )
   
   })#renderText
