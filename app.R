@@ -29,9 +29,9 @@ ui <- basicPage(
       checkboxInput("rev","reverse colors", FALSE)
     ), # column (middle)
     
-    column(width=2), # column (padding)
+    #column(width=2), # column (padding)
     
-    column(width=3,
+    column(width=3,offset=2,
       selectInput("core", "Select Core Image: "
           , c(
             "L1" ,
@@ -78,15 +78,25 @@ ui <- basicPage(
         )#column
 
          , column(width=3,
+                HTML("Main Panel (click)"),
                 tableOutput("main_ref"),
+                HTML("Right Panel (hover)"),
                 tableOutput("right_ref"),
+                HTML("Bottom Panel (hover)"),
                 tableOutput("bottom_ref")
          )#column
     )#fluidRow
   , fluidRow(
       column(width=9,
-          tableOutput("xtbl")
-             )
+          HTML("X-Axis Geometric"),
+          tableOutput("xtbl_Geom"),
+          HTML("X-Axis Fractal"),
+          tableOutput("xtbl_Frac"),
+          HTML("Y-Axis Geometric"),
+          tableOutput("ytbl_Geom"),
+          HTML("Y-Axis Fractal"),
+          tableOutput("ytbl_Frac")
+      )#column
   )
   
   )# basicPage
@@ -233,21 +243,51 @@ server <- function(input, output, session) {
     abline(h=mca$y)
   })
    
+ 
   output$main_ref <- renderTable({
     mc()
-  })# renderTable (main_ref)
+  })
   
   output$right_ref <- renderTable({
     rha()
-  })# renderTable (right_ref)
+  })
   
   output$bottom_ref <- renderTable({
     bha()
-  })# renderTable (bottom_ref)
+  })
   
-
   
-  output$xtbl <- renderTable({
+  output$xtbl_Geom <- renderTable({
+    if (is.null(input$bbd$ymin)) {
+      df_ <- dep()[,mca$y]
+      tbl <- data.frame(x=1:nrow(dep()), y=df_)
+      tbl <- na.omit(tbl)
+    } else {
+      df_ <- dep()[bbr.min():bbr.max(), mca$y]
+      tbl <- data.frame(x=bbr.min():bbr.max(), y=df_)
+      tbl <- na.omit(tbl)
+    }
+    
+    Geom(tbl)
+  }, spacing="xs")
+  
+  
+  output$xtbl_Frac <- renderTable({
+    if (is.null(input$bbd$ymin)) {
+      df_ <- dep()[,mca$y]
+      tbl <- data.frame(x=1:nrow(dep()), y=df_)
+      tbl <- na.omit(tbl)
+    } else {
+      df_ <- dep()[bbr.min():bbr.max(), mca$y]
+      tbl <- data.frame(x=bbr.min():bbr.max(), y=df_)
+      tbl <- na.omit(tbl)
+    }
+    
+    Frac(tbl)
+  }, spacing="xs")
+  
+  
+  output$ytbl_Geom <- renderTable({
     if (is.null(input$rbd$xmin)) {
         df_ <- dep()[mca$x,]
         tbl <- data.frame(x=1:ncol(dep()), y=df_)
@@ -258,11 +298,26 @@ server <- function(input, output, session) {
         tbl <- na.omit(tbl)
     }
     
-    #Geom(tbl)
-    Frac(tbl)
+    Geom(tbl)
+    }, spacing="xs")
+  
+  
+  output$ytbl_Frac <- renderTable({
+    if (is.null(input$rbd$xmin)) {
+      df_ <- dep()[mca$x,]
+      tbl <- data.frame(x=1:ncol(dep()), y=df_)
+      tbl <- na.omit(tbl)
+    } else {
+      df_ <- dep()[mca$x,rbr.min():rbr.max()]
+      tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
+      tbl <- na.omit(tbl)
     }
-    , spacing="xs"
-  )
+    
+    Frac(tbl)
+  }, spacing="xs")
+  
+  
+  
 }#server
 
 # Run Application ---------------------------------------------------------
