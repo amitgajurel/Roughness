@@ -12,11 +12,11 @@ load("data/Limestone_1mm.RData")
 
 ui <- basicPage(
   fluidRow(
-    column(width=2,
+    column(width=1,
       checkboxInput("image", "Show Depth", FALSE)
     ), # column (left)
     
-    column(width=3,
+    column(width=2,
       selectInput("colors", "Color Scheme: "
           , c(
             "heat.colors",
@@ -28,7 +28,7 @@ ui <- basicPage(
       ),
       checkboxInput("rev","reverse colors", FALSE)
     ), # column (middle)
-    
+    column(width=2),
     column(width=3,
       selectInput("core", "Select Core Image: "
           , c(
@@ -164,7 +164,7 @@ server <- function(input, output, session) {
              V21.RGB)
     }) # reactive (z)
     
-    mca <- reactiveValues(x = 100, y= 100)
+    mca <- reactiveValues(x = 314/2, y=214/2)
     mcr <- reactiveValues(x = 0.5, y=0.5)
     
     observeEvent(input$mcd$x, {
@@ -181,32 +181,47 @@ server <- function(input, output, session) {
   output$main <- renderPlot({
     if(input$image) {
        image(dep()
-             , axes=T
-             #, useRaster=T
+             , axes=F
              , col=color()
              , ylim=c(1,0)
              , xlim=c(-0.05, 1.05)
              , xaxt="s"
-        )#, zlim=c(input$range[1],input$range[2]))
+        )
+       axis(1, at=seq(0,300/nrow(dep()),length.out=7), labels = seq(0,300,50))
+       axis(2, at=seq(0,200/ncol(dep()),length.out=5), labels = seq(0,200,50))
        abline(v=mcr$x, h=mcr$y)
     } else {
-       plot(img(), axes=T, useRaster=T)
+       plot(img()
+            , axes=T
+            #, useRaster=T
+            , xlab = "circumferential (mm)"
+            , ylab = "longitudinal (mm)"
+       )
        abline(v=mca$x, h=mca$y)
     }
     
     box(lwd=3)
-    
-    #points(mcr$x, rha()[2]/h, pch=3)
-    #points(bha()[2]/w, mcr$y, pch=3)
   })#main
   
   output$bottom <- renderPlot({
-    plot(dep()[,mca$y], type="l", lwd=2)
+    plot(dep()[,mca$y]
+         , type="l"
+         , lwd=2
+         , xlab="circumferential (mm)"
+         , ylab="depth (mm)"
+    )
     abline(v=mca$x)
   })
   
   output$right <- renderPlot({
-    plot(dep()[mca$x,],1:dim(dep())[2], type="l", lwd=2, ylim=c(dim(dep())[2],0))
+    plot(dep()[mca$x,]
+         , 1:dim(dep())[2]
+         , type="l"
+         , lwd=2
+         , ylim=c(dim(dep())[2],0)
+         , ylab = "longitudinal (mm)"
+         , xlab = "depth (mm)"
+    )
     abline(h=mca$y)
   })
    
