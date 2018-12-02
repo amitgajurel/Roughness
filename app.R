@@ -1,9 +1,10 @@
 library(shiny)
 if (!require('devtools')) install.packages('devtools'); library('devtools')
-source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/L1.R")
+
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Geo.R")
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Frac.R")
 
+load("data/Limestone_1mm.RData")
 
 # GUI Interface -----------------------------------------------------------
 # See Notes at EOF for Variable Naming Scheme
