@@ -86,18 +86,18 @@ ui <- basicPage(
                 tableOutput("bottom_ref")
          )#column
     )#fluidRow
-  , fluidRow(
-      column(width=9,
-          HTML("X-Axis Geometric"),
-          tableOutput("xtbl_Geom"),
-          HTML("X-Axis Fractal"),
-          tableOutput("xtbl_Frac"),
-          HTML("Y-Axis Geometric"),
-          tableOutput("ytbl_Geom"),
-          HTML("Y-Axis Fractal"),
-          tableOutput("ytbl_Frac")
-      )#column
-  )
+   , fluidRow(
+       column(width=9,
+           HTML("X-Axis Geometric"),
+           tableOutput("xtbl_Geom"),
+           HTML("X-Axis Fractal"),
+           tableOutput("xtbl_Frac"),
+           HTML("Y-Axis Geometric"),
+           tableOutput("ytbl_Geom"),
+           HTML("Y-Axis Fractal"),
+           tableOutput("ytbl_Frac")
+       )#column
+   )#fluidrow
   
   )# basicPage
 
@@ -113,8 +113,8 @@ server <- function(input, output, session) {
     rbr.min <- reactive({round(input$rbd$ymin,0)})
     rbr.max <- reactive({round(input$rbd$ymax,0)})
     
-    bbr.min <- reactive({round(input$bbd$ymin,0)})
-    bbr.max <- reactive({round(input$bbd$ymax,0)})
+    bbr.min <- reactive({round(input$bbd$xmin,0)})
+    bbr.max <- reactive({round(input$bbd$xmax,0)})
     
     mz <- reactive({round(dep()[mca$x, mca$y],2)})
     mc <- reactive({matrix(c(mca$x, mca$y, mz())
@@ -236,6 +236,7 @@ server <- function(input, output, session) {
          , 1:dim(dep())[2]
          , type="l"
          , lwd=2
+         , xlim=c(max(dep()[mca$x,], na.rm=T),min(dep()[mca$x,], na.rm=T))
          , ylim=c(dim(dep())[2],0)
          , ylab = "longitudinal (mm)"
          , xlab = "depth (mm)"
@@ -258,7 +259,7 @@ server <- function(input, output, session) {
   
   
   output$xtbl_Geom <- renderTable({
-    if (is.null(input$bbd$ymin)) {
+    if (is.null(input$bbd$xmin)) {
       df_ <- dep()[,mca$y]
       tbl <- data.frame(x=1:nrow(dep()), y=df_)
       tbl <- na.omit(tbl)
@@ -273,7 +274,7 @@ server <- function(input, output, session) {
   
   
   output$xtbl_Frac <- renderTable({
-    if (is.null(input$bbd$ymin)) {
+    if (is.null(input$bbd$xmin)) {
       df_ <- dep()[,mca$y]
       tbl <- data.frame(x=1:nrow(dep()), y=df_)
       tbl <- na.omit(tbl)
