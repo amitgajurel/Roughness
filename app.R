@@ -1,5 +1,6 @@
 library(shiny)
 if (!require('devtools')) install.packages('devtools'); library('devtools')
+if (!require('imager')) install.packages('imager'); library('imager')
 
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Geo.R")
 source("C:/Users/Craig/Dropbox/_UNF/Craig Thesis/R-Roughness/R/Roughness/Roughness-Frac.R")
@@ -12,7 +13,7 @@ load("data/Limestone_1mm.RData")
 ui <- basicPage(
   fluidRow(
     column(width=2,
-      checkboxInput("image", "Show Depth", TRUE)
+      checkboxInput("image", "Show Depth", FALSE)
     ), # column (left)
     
     column(width=3,
@@ -108,10 +109,10 @@ server <- function(input, output, session) {
                            , dimnames=list("main", c("x","y","z"))
           )})
     
-    rdf <- reactive({data.frame(x=dep()[mca$x,], y=1:ncol(z))})
+    rdf <- reactive({data.frame(x=dep()[mca$x,], y=1:ncol(dep()))})
     rha <- reactive({nearPoints(rdf(), input$rhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
-    bdf <- reactive({data.frame(y=dep()[,mca$y], x=1:nrow(z))})
+    bdf <- reactive({data.frame(y=dep()[,mca$y], x=1:nrow(dep()))})
     bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
     
     color <- reactive({
@@ -189,7 +190,7 @@ server <- function(input, output, session) {
         )#, zlim=c(input$range[1],input$range[2]))
        abline(v=mcr$x, h=mcr$y)
     } else {
-       plot(img(), axes=T)#, useRaster=T)
+       plot(img(), axes=T, useRaster=T)
        abline(v=mca$x, h=mca$y)
     }
     
@@ -227,11 +228,11 @@ server <- function(input, output, session) {
   
   output$xtbl <- renderTable({
     if (is.null(input$rbd$xmin)) {
-        df_ <- z[mca$x,]
-        tbl <- data.frame(x=1:ncol(z), y=df_)
+        df_ <- dep()[mca$x,]
+        tbl <- data.frame(x=1:ncol(dep()), y=df_)
         tbl <- na.omit(tbl)
     } else {
-        df_ <- z[mca$x,rbr.min():rbr.max()]
+        df_ <- dep()[mca$x,rbr.min():rbr.max()]
         tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
         tbl <- na.omit(tbl)
     }

@@ -149,9 +149,11 @@ rlFractal <- function(z) {
     
     coeffs <- polyfit(Lwv, Lwrms, 1)
     #D <- 1-coeffs[1]
-    D <- 1-coeffs[1]
+    #D <- 1-coeffs[1]
     
-    a <- abs(coeffs[2])
+    #a <- abs(coeffs[2])
+    
+    use <- is.finite(wv)
     
     D <- unname(lm(Lwv[use]~Lwrms[use])$coef[1])
     
