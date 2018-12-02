@@ -28,7 +28,9 @@ ui <- basicPage(
       ),
       checkboxInput("rev","reverse colors", FALSE)
     ), # column (middle)
-    column(width=2),
+    
+    column(width=2), # column (padding)
+    
     column(width=3,
       selectInput("core", "Select Core Image: "
           , c(
@@ -47,17 +49,17 @@ ui <- basicPage(
         plotOutput("main"
           , height = "350px"
           , click = "mcd"
-          , dblclick = "mdd"
-          , hover = "mhd"
-          , brush = "mbd"
+          #, dblclick = "mdd"
+          #, hover = "mhd"
+          #, brush = "mbd"
         )#plotOutput
       )#column
       
       , column(width=3,
           plotOutput("right"
             , height="350px"
-            , click="rcd"
-            , dblclick = "rdd"
+            #, click="rcd"
+            #, dblclick = "rdd"
             , hover = "rhd"
             , brush=brushOpts(id="rbd", direction="y")
           )#plotOutput
@@ -68,16 +70,17 @@ ui <- basicPage(
         column(width=6,
           plotOutput("bottom"
             , height="250px"
-            , click="bcd"
-            , dblclick="bdd"
+            #, click="bcd"
+            #, dblclick="bdd"
             , hover="bhd"
             , brush=brushOpts(id="bbd", direction="x")
           )#plotOutput
         )#column
 
          , column(width=3,
-                tableOutput("info"),
-                verbatimTextOutput("bpnl")
+                tableOutput("main_ref"),
+                tableOutput("right_ref"),
+                tableOutput("bottom_ref")
          )#column
     )#fluidRow
   , fluidRow(
@@ -109,11 +112,16 @@ server <- function(input, output, session) {
                            , dimnames=list("main", c("x","y","z"))
           )})
     
-    rdf <- reactive({data.frame(x=dep()[mca$x,], y=1:ncol(dep()))})
-    rha <- reactive({nearPoints(rdf(), input$rhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
+    rdf <- reactive({data.frame(y=1:ncol(dep()), z=dep()[mca$x,])})
+    rha <- reactive({nearPoints(rdf(), input$rhd, xvar="z", yvar="y", threshold=10,maxpoints=1)})
     
-    bdf <- reactive({data.frame(y=dep()[,mca$y], x=1:nrow(dep()))})
-    bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="y", threshold=10,maxpoints=1)})
+    bdf <- reactive({data.frame(x=1:nrow(dep()), z=dep()[,mca$y])})
+    bha <- reactive({nearPoints(bdf(), input$bhd, xvar="x", yvar="z", threshold=10,maxpoints=1)})
+    
+    rc <- reactive({matrix(c(mca$x, mca$y, rha())
+                           , nrow=1
+                           , dimnames=list("main", c("x","y","z"))
+    )})
     
     color <- reactive({
         colVal <- 1:5
@@ -225,21 +233,19 @@ server <- function(input, output, session) {
     abline(h=mca$y)
   })
    
-  output$info <- renderTable({
+  output$main_ref <- renderTable({
     mc()
-  })#renderText
+  })# renderTable (main_ref)
   
-  output$bpnl <- renderText({
-    
-  paste0("Bottom Panel Hover:\n",
-         "x: ", bha()[2], "\n",
-         "y: ", mca$y, "\n",
-         "z: ", round(bha()[1],2),"\n",
-         "ref :", is.null(input$rbd$xmin),"\n",
-         "z() :", dim(dep())[2]
-        )
+  output$right_ref <- renderTable({
+    rha()
+  })# renderTable (right_ref)
   
-  })#renderText
+  output$bottom_ref <- renderTable({
+    bha()
+  })# renderTable (bottom_ref)
+  
+
   
   output$xtbl <- renderTable({
     if (is.null(input$rbd$xmin)) {
