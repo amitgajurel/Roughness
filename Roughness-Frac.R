@@ -78,7 +78,9 @@ divModFrac <- function(z) {
   
   D = 1-slope_B # D = fractal dimension
   
-  return(D)
+  # returning dimension and intercept as vectors
+  
+  return(c(D,intercept))
 }
 
 
@@ -155,9 +157,15 @@ rlFractal <- function(z) {
     
     use <- is.finite(wv)
     
+    # Need to verify the formula to match matlab code
+    
     D <- unname(lm(Lwv[use]~Lwrms[use])$coef[1])
     
-    return(D)
+    # Added a formula for intercept based on matlab code
+    a <- unname(lm(Lwv[use]~Lwrms[use])$coef[2])
+    
+    # returning Dimension and Intercept 
+    return(c(D,a))
 }
 
 #' This function computes the fractal dimension using the spectral method
@@ -166,7 +174,9 @@ rlFractal <- function(z) {
 #' 
 #' @param z A dataframe of profile data: length and depth
 #' 
-#' @author Stephanie Brown, modified for R by D. Craig Jones
+#' @author Stephanie Brown, modified for R by D. Craig Jones, modified by Amit
+#' Gajurel
+#' 
 #' @examples
 #'    z <- data.frame(x=1:50, y=rnorm(50))
 #'   SpectralMethod(z)
@@ -198,9 +208,13 @@ SpectralMethod <- function(z) {
     a <- coeffs[2]
     slope_B <- coeffs[1]
     
+    
+    # Need to verify the formula matches the matlab code
     D <- 1-(5+slope_B)/2
     
-    return(abs(D))
+    # Returning Dimension and intercept
+    
+    return(c(abs(D),a))
 }
 
 
@@ -228,7 +242,9 @@ semivarFrac <- function(z) {
     slope <- coeffs[1]
     a <- coeffs[2]
     D <- 2 - slope/2
-    return(D)
+    
+    # returning Dimension and Intercept
+    return(c(D,a))
 }
 
 countSquares <- function(x,y,s) {
@@ -298,7 +314,13 @@ boxcount <- function(z) {
     
     D <- unname(lm(log_invR[use]~log_N[use])$coef[2])
     
-    return(D)
+    # Added a formula for intercept
+    
+    a <- unname(lm(log_invR[use]~log_N[use])$coef[1])
+    
+    # returning Dimension and intercept
+    
+    return(c(D,a))
 } # boxcount
 
 
@@ -308,6 +330,7 @@ Frac <- function(z) {
                        , SpectralMethod = SpectralMethod(z)
                        , Semivariance = semivarFrac(z)
                        , boxcount = boxcount(z)
+                       , row.names = c("Dimension","Intercept")
   )
   
   return(retVal)

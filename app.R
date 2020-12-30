@@ -309,7 +309,7 @@ server <- function(input, output, session) {
     }
     
     Frac(tbl)
-  }, spacing="xs")
+  }, spacing="xs", rownames = TRUE)
   
   
   output$ytbl_Geom <- renderTable({
@@ -329,17 +329,17 @@ server <- function(input, output, session) {
   
   output$ytbl_Frac <- renderTable({
     if (is.null(input$rbd$xmin)) {
-      df_ <- dep()[mca$x,]
-      tbl <- data.frame(x=1:ncol(dep()), y=df_)
+      df_ <- dep()[mca$x, ]
+      tbl <- data.frame(x = 1:ncol(dep()), y = df_)
       tbl <- na.omit(tbl)
     } else {
-      df_ <- dep()[mca$x,rbr.min():rbr.max()]
-      tbl <- data.frame(x=rbr.min():rbr.max(), y=df_)
+      df_ <- dep()[mca$x, rbr.min():rbr.max()]
+      tbl <- data.frame(x = rbr.min():rbr.max(), y = df_)
       tbl <- na.omit(tbl)
     }
     
     Frac(tbl)
-  }, spacing="xs")
+  }, spacing = "xs", rownames = TRUE)
   
   
   
